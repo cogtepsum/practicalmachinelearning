@@ -10,7 +10,7 @@ following text. I hope you will be able to fully understand it.*
 
 #### Abstract
 
-In this study I'm trying to predict a manner in which people perform barbell exercises using data from a variety of wearable devices. More information on the experiment can be found [here](http://groupware.les.inf.puc-rio.br/work.jsf?p1=11201). In that study scientists obtained classification accuracy of 99.14%, so we will expect out model to has accuracy of about the same value in cross-validation. I'm going to follow the most simple and straightforward logic of study, doing only what seems necessary at the moment.
+In this study I'm trying to predict a manner in which people perform barbell exercises using data from a variety of wearable devices. More information on the experiment can be found [here](http://groupware.les.inf.puc-rio.br/work.jsf?p1=11201). In that study scientists obtained classification precision of 99.4%, so we will expect out model to has accuracy of about the same value in cross-validation. I'm going to follow the most simple and straightforward logic of study, doing only what seems necessary at the moment.
 
 #### Exploring the dataset
 
