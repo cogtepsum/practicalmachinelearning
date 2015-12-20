@@ -5,18 +5,82 @@ date: "December 16, 2015"
 output: html_document
 ---
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+###### Preliminary remark: *I am not a native English speaker and I apologize for possible grammar mistakes in the
+following text. I hope you will be able to fully understand it.*
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+#### Abstract
 
+In this study I'm trying to predict a manner in which people perform barbell exercises using data from a variety of wearable devices. More information on the experiment can be found [here](http://groupware.les.inf.puc-rio.br/work.jsf?p1=11201). In that study scientists obtained classification accuracy of 99.14%, so we will expect out model to has accuracy of about the same value in cross-validation. I'm going to follow the most simple and straightforward logic of study, doing only what seems necessary at the moment.
+
+#### Exploring the dataset
+
+First let's load training data and check its dimensions with this code:
 ```{r}
-summary(cars)
+training <- read.csv('pml-training.csv', na.strings = c('NA', '#DIV/0!', ''))
+dim(training)
 ```
 
-You can also embed plots, for example:
-
-```{r, echo=FALSE}
-plot(cars)
+There are a lot of variables in here. To speed up future training let's check if there are some variables that have a lot of missing values:
+```{r}
+hist(colSums(is.na(training)))
+```
+The histogram shows that about 100 variables consists of NA almost completely. Let's get rid of these variables and check if there are any NAs remaining:
+```{r}
+training_short <- training[, colSums(is.na(training)) < 5000]
+summary(colSums(is.na(training_short)))
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+Fortunately, we've got rid of all of the missing values in our dataset, which means that there's no need to exclude observations.
+
+#### Training the model
+
+Now let's prepare our training data for cross-validation by dividing it into train-set and CV-set:
+```{r, message=FALSE}
+library(caret)
+inTrain <- createDataPartition(training_short$classe, p = 0.75, list=F)
+train <- training_short[inTrain,]
+cv <- training_short[-inTrain,]
+```
+
+And train random forest classificator on the `train` dataset. We shall exclude two variables from the list of predictors: `X` and `user_name`, because they do not make much sense as predictors. `X` is just an index so we don't want it to be a predictor, and `user_name` is just a name and probably has nothing to do with physical performance. Although, it would be an interesting result to discover that people with name "Carlos" all making the same mistake, but I wouldn't count on that.
+```{r, cache=TRUE, message=FALSE}
+library(randomForest)
+mFit <- randomForest(classe ~ . - X - user_name, data = train)
+```
+
+Let's check the accuracy of this model on CV-set:
+
+```{r, message=FALSE, cache=TRUE}
+library(randomForest)
+predictions <- predict(mFit, newdata = cv)
+confusionMatrix(predictions, cv$classe)$overall['Accuracy']
+```
+
+We've got a very high accuracy with our model. This value is quite close to such obtained by authors of the dataset. Now we will make predictions for the test data.
+
+#### Predicting for test data
+
+First, we should read test dataset and exclude from it variables that were excluded from the training data:
+```{r, cache=TRUE}
+testing <- read.csv('pml-testing.csv', na.strings = c('NA', '#DIV/0!', ''))
+newtest <- testing[,which(names(testing) %in% names(training_short))]
+```
+
+Now, we have factor variables in our test data that have less levels than those in training data. Let's fix this:
+```{r}
+levels(newtest$user_name) <- levels(train$user_name)
+levels(newtest$new_window) <- levels(train$new_window)
+levels(newtest$cvtd_timestamp) <- levels(train$cvtd_timestamp)
+```
+
+Now the test set is ready for applying fitted model. We will create submission files with a function provided in the instructions:
+```{r, eval=F}
+answers <- predict(mFit, newtest)
+pml_write_files(answers)
+```
+
+These predictions perfectly passed the validation system. This proves the model to be correct.
+
+#### Summary
+
+In this study we've obtained a very high accuracy with a very simple model. Preprocessing was performed by just removing near-NA values and excluding two clearly meaningless variables form a model. Although the model could be improved by excluding less important variables or performing PCA dimensionality reduction, or by using more advanced machine learning technics and instruments (for instance, by using caret `train(..., method = 'rf', ...)` function instead of `randomForest()`), there seems to be no need for such actions in this assignment.

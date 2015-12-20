@@ -16,3 +16,9 @@ vignettes/*.pdf
 # data files
 pml-testing.csv
 pml-training.csv
+
+# technical scripts
+log_script.R
+
+# answers
+*.txt
