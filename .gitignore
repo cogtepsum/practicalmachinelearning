@@ -11,3 +11,8 @@
 # produced vignettes
 vignettes/*.html
 vignettes/*.pdf
+.Rproj.user
+
+# data files
+pml-testing.csv
+pml-training.csv
