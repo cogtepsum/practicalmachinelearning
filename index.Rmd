@@ -24,6 +24,7 @@ There are a lot of variables in here. To speed up future training let's check if
 ```{r}
 hist(colSums(is.na(training)))
 ```
+
 The histogram shows that about 100 variables consists of NA almost completely. Let's get rid of these variables and check if there are any NAs remaining:
 ```{r}
 training_short <- training[, colSums(is.na(training)) < 5000]
